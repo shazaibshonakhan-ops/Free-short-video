@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shorts Maker - Natural Voice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F1FB; --panel:#FFFFFF; --ink:#1C1233; --muted:#6B6285; --line:#DDD5F0;
+  --accent:#6A3DFF; --on-accent:#FFFFFF; --soft:#EBE5FA;
+  --display:'Bricolage Grotesque','Arial Black','Helvetica Neue',Arial,sans-serif;
+  --text:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#150C27; --panel:#211238; --ink:#F3EEFF; --muted:#A99CCB; --line:#37244F;
+    --accent:#B79CFF; --on-accent:#1C1233; --soft:#2D1A4A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#150C27; --panel:#211238; --ink:#F3EEFF; --muted:#A99CCB; --line:#37244F;
+  --accent:#B79CFF; --on-accent:#1C1233; --soft:#2D1A4A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+.app{max-width:1000px;margin:0 auto;padding:16px 16px 0}
+h1{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-0.02em;margin:4px 0 2px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:15px}
+.grid{display:grid;gap:20px}
+@media (min-width:860px){
+  .grid{grid-template-columns:340px 1fr;align-items:start}
+  .stage-wrap{position:sticky;top:16px}
+}
+.stage-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.stage{aspect-ratio:9/16;height:min(58vh,540px);max-width:100%;border-radius:22px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.stage canvas{width:100%;height:100%;display:block}
+.status{min-height:22px;font-size:14px;color:var(--muted);text-align:center;max-width:340px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.panel h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0 0 4px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 10px}
+textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px;font:inherit;font-size:16px;line-height:1.5}
+textarea:focus-visible,select:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.looks{display:flex;gap:12px;flex-wrap:wrap}
+.look{width:46px;height:46px;border-radius:50%;border:3px solid transparent;padding:0;cursor:pointer;box-shadow:0 0 0 1px var(--line)}
+.look[aria-pressed="true"]{border-color:var(--panel);box-shadow:0 0 0 3px var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:10px 16px;font:inherit;font-size:15px;cursor:pointer;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.dots{display:flex;gap:10px}
+.dot{width:34px;height:34px;border-radius:50%;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.dot[aria-pressed="true"]{box-shadow:0 0 0 3px var(--accent)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;min-height:44px}
+.switch label{flex:1}
+.switch input{width:22px;height:22px;accent-color:var(--accent)}
+select{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:11px;font:inherit;font-size:15px;min-height:44px;margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btn{border:0;border-radius:999px;padding:14px 22px;font:inherit;font-weight:600;font-size:16px;cursor:pointer;min-height:48px}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn.main{background:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:8px 0;min-height:44px;text-decoration:underline}
+.bar{position:sticky;bottom:0;background:var(--bg);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;border-top:1px solid var(--line);margin-top:6px}
+.bar .btn{flex:1}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.lbl{display:block;color:var(--muted);font-size:14px;margin:12px 0 2px}
+.txt{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:11px;font:inherit;font-size:16px;min-height:44px}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:6px 0 0}
+.thumbs img{height:84px;aspect-ratio:9/16;border-radius:8px;border:1px solid var(--line);flex:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Shorts Maker</h1>
+  <p class="sub">Type a script. Get a vertical video with a natural voice and moving captions.</p>
+
+  <div class="grid">
+    <div class="stage-wrap">
+      <div class="stage"><canvas id="cv" aria-label="Video preview"></canvas></div>
+      <div class="status" id="status" aria-live="polite">Ready</div>
+    </div>
+
+    <div>
+      <section class="panel">
+        <h2>Script</h2>
+        <p class="hint">Each line becomes a scene. Long lines split on their own.</p>
+        <textarea id="script" spellcheck="true">Did you know honey never spoils?
+Archaeologists found 3,000-year-old honey in Egyptian tombs.
+It was still perfectly edible.
+Follow for more weird facts.</textarea>
+      </section>
+
+      <section class="panel">
+        <h2>Voice</h2>
+        <p class="hint" id="engineNote">The natural voice is an AI model that runs on your device. The voice is recorded into the saved video.</p>
+        <select id="engine" aria-label="Voice type">
+          <option value="kokoro">Natural voice (recorded in video)</option>
+          <option value="device">Device voice (preview only)</option>
+          <option value="custom">My own voice-over (file or recording)</option>
+          <option value="none">No voice</option>
+        </select>
+        <div id="kBlock">
+          <select id="kVoice" aria-label="Natural voice">
+            <option value="af_heart">Heart - US woman</option>
+            <option value="af_bella">Bella - US woman, warm</option>
+            <option value="af_nicole">Nicole - US woman, soft</option>
+            <option value="af_sarah">Sarah - US woman</option>
+            <option value="af_sky">Sky - US woman, light</option>
+            <option value="am_adam">Adam - US man</option>
+            <option value="am_michael">Michael - US man</option>
+            <option value="bf_emma">Emma - UK woman</option>
+            <option value="bf_isabella">Isabella - UK woman</option>
+            <option value="bm_george">George - UK man</option>
+            <option value="bm_lewis">Lewis - UK man</option>
+          </select>
+          <div class="row" style="margin-top:10px">
+            <button class="btn ghost" id="btnModel" type="button">Load natural voice</button>
+            <span class="hint" id="modelInfo" style="margin:0">About 80 MB, one time. English only.</span>
+          </div>
+        </div>
+        <select id="voiceSel" aria-label="Device voice" hidden></select>
+        <div id="cBlock" hidden>
+          <p class="hint" style="margin:10px 0">Use your own audio. It is recorded into the saved video. Write the words you say in the script so the captions match.</p>
+          <div class="row">
+            <button class="btn ghost" id="btnAudioFile" type="button">Choose audio</button>
+            <button class="btn ghost" id="btnRec" type="button">Record my voice</button>
+            <input id="audioInput" type="file" accept="audio/*,video/*" hidden>
+          </div>
+          <p class="hint" id="cInfo" style="margin:8px 0 0">No voice-over yet.</p>
+          <div class="row">
+            <button class="link" id="btnCPlay" type="button" hidden>Play</button>
+            <button class="link" id="btnCClear" type="button" hidden>Remove</button>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label for="pace" class="hint" style="display:block;margin-bottom:4px">Speaking pace: <span id="paceVal">1.0x</span></label>
+          <input type="range" id="pace" min="0.7" max="1.4" step="0.1" value="1">
+        </div>
+        <div class="switch" style="margin-top:6px"><label for="music">Background music</label><input type="checkbox" id="music" checked></div>
+      </section>
+
+      <section class="panel">
+        <h2>Background</h2>
+        <p class="hint">Pick a moving backdrop, or use your own photos.</p>
+        <div class="looks" id="looks"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost" id="btnPhotos" type="button">Use my photos</button>
+          <span class="hint" id="photoInfo" style="margin:0"></span>
+          <button class="link" id="btnClear" type="button" hidden>Remove photos</button>
+          <input id="photoInput" type="file" accept="image/*" multiple hidden>
+        </div>
+      </section>
+
+      <section class="panel" id="imgPanel">
+        <h2>Text to image</h2>
+        <p class="hint" id="imgHint"></p>
+        <input type="text" id="imgStyle" class="txt" placeholder="Style, e.g. neon city, watercolor, paper cut" aria-label="Art style">
+        <div class="switch"><label for="autoImg">Make images automatically when I preview or save</label><input type="checkbox" id="autoImg" checked></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn main" id="imgGo" type="button">Make images from script</button>
+          <button class="link" id="imgClear" type="button">Clear</button>
+        </div>
+        <p class="hint" id="imgInfo" style="margin:8px 0 0"></p>
+        <div class="thumbs" id="thumbs"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Captions</h2>
+        <div class="row" style="margin-bottom:12px">
+          <div class="seg" id="capStyle" role="group" aria-label="Caption style">
+            <button type="button" data-v="pop" aria-pressed="true">Pop</button>
+            <button type="button" data-v="box" aria-pressed="false">Box</button>
+            <button type="button" data-v="plain" aria-pressed="false">Plain</button>
+          </div>
+        </div>
+        <div class="dots" id="hlColors" role="group" aria-label="Highlight color"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Text to voice</h2>
+        <p class="hint">Turn any text into a natural voice clip and save it as a WAV file.</p>
+        <textarea id="ttsText" style="min-height:90px" placeholder="Text to speak"></textarea>
+        <label class="lbl" for="ttsRate">Speed</label>
+        <input type="range" id="ttsRate" min="0.7" max="1.4" step="0.1" value="1">
+        <div class="row" style="margin-top:12px">
+          <button class="btn main" id="ttsGo" type="button">Speak</button>
+          <button class="btn ghost" id="ttsSave" type="button" disabled>Save WAV</button>
+          <button class="link" id="ttsFromScript" type="button">Use my script</button>
+        </div>
+        <p class="hint" id="ttsInfo" style="margin:8px 0 0"></p>
+        <p class="note">Uses the voice chosen above. Saving a WAV file needs the natural voice.</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn ghost" id="btnPlay" type="button">Preview</button>
+    <button class="btn main" id="btnSave" type="button">Save video</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const W=720,H=1280;
+const $=s=>document.querySelector(s);
+const cv=$('#cv'); cv.width=W; cv.height=H;
+const g=cv.getContext('2d');
+const FONT="'Bricolage Grotesque','Arial Black','Helvetica Neue',Arial,sans-serif";
+const KURL='https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm';
+const KMODEL='onnx-community/Kokoro-82M-v1.0-ONNX';
+
+const LOOKS={
+  aurora:{a:'#0b1d3a',b:'#1b0b3a',blobs:[[0,255,200],[120,80,255],[255,80,180]]},
+  sunset:{a:'#2b0a3d',b:'#ff6a3d',blobs:[[255,200,80],[255,60,120],[120,40,200]]},
+  ocean:{a:'#021a2b',b:'#0b5d7a',blobs:[[0,200,255],[40,120,255],[0,255,180]]},
+  neon:{a:'#12002b',b:'#000000',blobs:[[255,0,200],[0,240,255],[140,0,255]]},
+  forest:{a:'#06210f',b:'#1b4d2e',blobs:[[120,255,150],[220,255,90],[0,160,120]]},
+  mono:{a:'#101010',b:'#2a2a2a',blobs:[[255,255,255],[150,150,150],[90,90,90]]}
+};
+const HL=['#FFD84D','#FF5FA2','#5CFFC4','#FFFFFF'];
+const state={look:'aurora',cap:'pop',hl:HL[0],engine:'kokoro',kvoice:'af_heart',music:true,pace:1,images:[],voiceURI:'',gen:{},custom:null};
+
+try{const s=localStorage.getItem('shorts-script'); if(s) $('#script').value=s;}catch(e){}
+
+/* ---------- UI ---------- */
+const looksEl=$('#looks');
+Object.keys(LOOKS).forEach(k=>{
+  const b=document.createElement('button'); b.type='button'; b.className='look'; b.title=k; b.setAttribute('aria-label',k+' background');
+  const L=LOOKS[k]; const c=L.blobs[0];
+  b.style.background=`radial-gradient(circle at 30% 30%, rgb(${c}) 0%, transparent 60%), linear-gradient(160deg, ${L.a}, ${L.b})`;
+  b.setAttribute('aria-pressed',k===state.look);
+  b.onclick=()=>{state.look=k;[...looksEl.children].forEach(x=>x.setAttribute('aria-pressed',x===b));idle();};
+  looksEl.appendChild(b);
+});
+const dotsEl=$('#hlColors');
+HL.forEach(c=>{
+  const b=document.createElement('button'); b.type='button'; b.className='dot'; b.style.background=c; b.setAttribute('aria-label','Highlight '+c);
+  b.setAttribute('aria-pressed',c===state.hl);
+  b.onclick=()=>{state.hl=c;[...dotsEl.children].forEach(x=>x.setAttribute('aria-pressed',x===b));idle();};
+  dotsEl.appendChild(b);
+});
+document.querySelectorAll('#capStyle button').forEach(b=>{
+  b.onclick=()=>{state.cap=b.dataset.v;document.querySelectorAll('#capStyle button').forEach(x=>x.setAttribute('aria-pressed',x===b));idle();};
+});
+$('#music').onchange=e=>state.music=e.target.checked;
+$('#pace').oninput=e=>{state.pace=parseFloat(e.target.value);$('#paceVal').textContent=state.pace.toFixed(1)+'x';idle();};
+$('#script').addEventListener('input',()=>{try{localStorage.setItem('shorts-script',$('#script').value);}catch(e){} idle();});
+$('#kVoice').onchange=e=>state.kvoice=e.target.value;
+$('#engine').onchange=e=>{
+  state.engine=e.target.value;
+  $('#kBlock').hidden=state.engine!=='kokoro';
+  $('#voiceSel').hidden=state.engine!=='device';
+  $('#cBlock').hidden=state.engine!=='custom';
+  idle();
+};
+
+const IN_CLAUDE=!!(window.claude&&window.claude.use);
+if(IN_CLAUDE){
+  const eng=$('#engine'); const ko=eng.querySelector('option[value="kokoro"]'); if(ko) ko.remove();
+  state.engine='device'; eng.value='device';
+  $('#kBlock').hidden=true; $('#voiceSel').hidden=false; $('#btnRec').hidden=true;
+  $('#engineNote').textContent='Natural AI voices need the downloadable version. Device voices play in the preview only. To get a voice in the saved video, choose My own voice-over.';
+}
+$('#imgHint').textContent=IN_CLAUDE?'Claude draws a vector illustration for each scene, up to 10.':'AI makes a picture for each scene, up to 10, using a free online image service. It can take a couple of minutes.';
+
+/* photos */
+$('#btnPhotos').onclick=()=>$('#photoInput').click();
+$('#photoInput').onchange=async e=>{
+  const files=[...e.target.files].slice(0,8); const imgs=[];
+  for(const f of files){
+    const url=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res(null);r.readAsDataURL(f);});
+    if(!url) continue;
+    const im=new Image(); await new Promise(res=>{im.onload=res;im.onerror=res;im.src=url;});
+    if(im.naturalWidth) imgs.push(im);
+  }
+  state.images=imgs; photoUI(); idle();
+};
+$('#btnClear').onclick=()=>{state.images=[];$('#photoInput').value='';photoUI();idle();};
+function photoUI(){
+  const n=state.images.length;
+  $('#photoInfo').textContent=n?(n+(n===1?' photo':' photos')+' in use'):'';
+  $('#btnClear').hidden=!n;
+}
+
+/* device voices */
+let voices=[];
+function loadVoices(){
+  if(!('speechSynthesis' in window)) return;
+  voices=speechSynthesis.getVoices();
+  const sel=$('#voiceSel'); sel.innerHTML='';
+  const nat=v=>/natural|neural|online|premium|enhanced|siri|google/i.test(v.name+' '+v.voiceURI)?1:0;
+  const sorted=[...voices].sort((a,b)=>(b.lang.startsWith('en')-a.lang.startsWith('en'))||(nat(b)-nat(a))||a.name.localeCompare(b.name));
+  sorted.forEach(v=>{const o=document.createElement('option');o.value=v.voiceURI;o.textContent=(nat(v)?'\u2605 ':'')+v.name+' ('+v.lang+')';sel.appendChild(o);});
+  if(sorted.length){ if(!state.voiceURI) state.voiceURI=sorted[0].voiceURI; sel.value=state.voiceURI; }
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+$('#voiceSel').onchange=e=>state.voiceURI=e.target.value;
+function speakDevice(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const v=voices.find(x=>x.voiceURI===state.voiceURI); if(v){u.voice=v;u.lang=v.lang;}
+  u.rate=Math.min(1.6,state.pace);
+  speechSynthesis.speak(u);
+}
+
+/* ---------- status ---------- */
+let phase='idle'; // idle | prep | play | rec
+const status=m=>$('#status').textContent=m;
+function setModelInfo(m){ $('#modelInfo').textContent=m; if(phase==='prep') status(m); }
+
+/* ---------- Kokoro natural voice ---------- */
+let tts=null, loading=null;
+async function ensureModel(){
+  if(tts) return tts;
+  if(loading) return loading;
+  loading=(async()=>{
+    setModelInfo('Loading voice engine...');
+    const mod=await import(KURL);
+    const files={};
+    const t=await mod.KokoroTTS.from_pretrained(KMODEL,{
+      dtype:'q8', device:'wasm',
+      progress_callback:p=>{
+        if(p&&p.status==='progress'&&p.file){
+          files[p.file]=p.progress||0;
+          const big=Math.max.apply(null,Object.keys(files).map(k=>files[k]));
+          setModelInfo('Downloading voice model... '+Math.round(big)+'%');
+        }
+      }
+    });
+    tts=t; setModelInfo('Natural voice ready');
+    return t;
+  })();
+  try{ return await loading; }
+  catch(e){ loading=null; tts=null; setModelInfo('Could not load the voice model: '+((e&&e.message)||e)); throw e; }
+}
+$('#btnModel').onclick=()=>{ ensureModel().catch(()=>{}); };
+
+const cache=new Map();
+async function genAudio(text,voice,speed){
+  const key=voice+'|'+speed+'|'+text;
+  if(cache.has(key)) return cache.get(key);
+  const t=await ensureModel();
+  const a=await t.generate(text,{voice:voice,speed:speed});
+  const rec={data:new Float32Array(a.audio),rate:a.sampling_rate};
+  cache.set(key,rec); return rec;
+}
+function chunkText(txt,max){
+  const parts=txt.match(/[^.!?\n]+[.!?]*/g)||[txt]; const out=[]; let cur='';
+  parts.forEach(p=>{ p=p.trim(); if(!p) return; if((cur+' '+p).length>max&&cur){out.push(cur);cur=p;} else cur=cur?cur+' '+p:p; });
+  if(cur) out.push(cur); return out;
+}
+async function genLong(text,voice,speed){
+  const chunks=chunkText(text,300); const recs=[];
+  for(let i=0;i<chunks.length;i++){ recs.push(await genAudio(chunks[i],voice,speed)); }
+  const rate=recs[0].rate, gap=Math.round(rate*0.25);
+  const total=recs.reduce((s,r)=>s+r.data.length,0)+gap*(recs.length-1);
+  const out=new Float32Array(total); let o=0;
+  recs.forEach((r,i)=>{ out.set(r.data,o); o+=r.data.length+(i<recs.length-1?gap:0); });
+  return {data:out,rate:rate};
+}
+function toWav(data,rate){
+  const buf=new ArrayBuffer(44+data.length*2), v=new DataView(buf);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i));};
+  w(0,'RIFF'); v.setUint32(4,36+data.length*2,true); w(8,'WAVE'); w(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  w(36,'data'); v.setUint32(40,data.length*2,true);
+  for(let i=0;i<data.length;i++){ const s=Math.max(-1,Math.min(1,data[i])); v.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true); }
+  return new Blob([buf],{type:'audio/wav'});
+}
+async function download(blob,name){
+  try{
+    const dl=(window.claude&&claude.use)?await claude.use('downloads'):null;
+    if(dl){ await dl.save({filename:name,data:blob}); return; }
+  }catch(e){ if(e&&e.code==='declined') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+}
+
+/* ---------- shared audio context ---------- */
+let AC=null;
+function audioCtx(){
+  if(!AC){ const C=window.AudioContext||window.webkitAudioContext; AC=new C(); }
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+
+/* ---------- text to voice panel ---------- */
+let ttsSrc=null, lastTts=null;
+$('#ttsFromScript').onclick=()=>{$('#ttsText').value=$('#script').value;};
+$('#ttsGo').onclick=async()=>{
+  const info=$('#ttsInfo'), btn=$('#ttsGo');
+  if(ttsSrc){ try{ttsSrc.stop();}catch(e){} return; }
+  const txt=$('#ttsText').value.trim();
+  if(!txt){ info.textContent='Type some text first.'; return; }
+  if(state.engine!=='kokoro'){
+    if(!('speechSynthesis' in window)){ info.textContent='This browser has no speech voices.'; return; }
+    if(speechSynthesis.speaking){ speechSynthesis.cancel(); btn.textContent='Speak'; return; }
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    const dv=voices.find(x=>x.voiceURI===state.voiceURI); if(dv){u.voice=dv;u.lang=dv.lang;}
+    u.rate=parseFloat($('#ttsRate').value);
+    u.onstart=()=>{btn.textContent='Stop';info.textContent='';};
+    u.onend=()=>{btn.textContent='Speak';};
+    u.onerror=ev=>{btn.textContent='Speak';info.textContent='Your device could not play this voice ('+((ev&&ev.error)||'error')+'). Pick another voice above.';};
+    speechSynthesis.speak(u);
+    setTimeout(()=>{ if(!speechSynthesis.speaking&&!speechSynthesis.pending&&btn.textContent==='Speak'&&!info.textContent) info.textContent='No sound started. Your device may have no voices installed, or the media volume is off.'; },1500);
+    return;
+  }
+  btn.disabled=true; btn.textContent='Making voice...'; info.textContent='';
+  try{
+    const rec=await genLong(txt,state.kvoice,parseFloat($('#ttsRate').value));
+    lastTts=rec; $('#ttsSave').disabled=false;
+    const ac=audioCtx(); const b=ac.createBuffer(1,rec.data.length,rec.rate); b.copyToChannel(rec.data,0);
+    const s=ac.createBufferSource(); s.buffer=b; s.connect(ac.destination);
+    s.onended=()=>{ttsSrc=null;btn.textContent='Speak';};
+    ttsSrc=s; s.start(); btn.textContent='Stop';
+  }catch(e){ info.textContent='Could not make the voice. Check your internet connection and try again.'; btn.textContent='Speak'; }
+  btn.disabled=false;
+};
+$('#ttsSave').onclick=()=>{ if(lastTts) download(toWav(lastTts.data,lastTts.rate),'voice-'+Date.now()+'.wav'); };
+
+/* ---------- own voice-over: file or recording ---------- */
+let recMic=null, recTimer=0, previewSrc=null;
+function setCustom(buf,name){
+  state.custom={buf:buf,name:name};
+  state.engine='custom'; $('#engine').value='custom';
+  $('#kBlock').hidden=true; $('#voiceSel').hidden=true; $('#cBlock').hidden=false;
+  $('#cInfo').textContent=name+' - '+buf.duration.toFixed(1)+' seconds. The video will match this length.';
+  $('#btnCPlay').hidden=false; $('#btnCClear').hidden=false;
+  idle();
+}
+async function decodeBlob(blob){
+  const ac=audioCtx(); const ab=await blob.arrayBuffer();
+  return await new Promise((res,rej)=>{ const p=ac.decodeAudioData(ab,res,rej); if(p&&p.catch) p.catch(rej); });
+}
+$('#btnAudioFile').onclick=()=>$('#audioInput').click();
+$('#audioInput').onchange=async e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  $('#cInfo').textContent='Reading audio...';
+  try{ setCustom(await decodeBlob(f),f.name); }
+  catch(err){ $('#cInfo').textContent='Could not read that file. Try an MP3, M4A, WAV or MP4 file.'; }
+  e.target.value='';
+};
+$('#btnRec').onclick=async()=>{
+  const btn=$('#btnRec'), info=$('#cInfo');
+  if(recMic){ recMic.stop(); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined'){ info.textContent='Recording is not available inside Claude. Record in your voice recorder app, then tap Choose audio and pick the recording.'; return; }
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(err){ info.textContent='Microphone access is blocked inside Claude. Record in your voice recorder app, then tap Choose audio and pick the recording.'; return; }
+  const chunks=[]; const mr=new MediaRecorder(stream); const t0=Date.now();
+  mr.ondataavailable=ev=>{ if(ev.data&&ev.data.size) chunks.push(ev.data); };
+  mr.onstop=async()=>{
+    clearInterval(recTimer); recMic=null; stream.getTracks().forEach(t=>t.stop()); btn.textContent='Record my voice';
+    info.textContent='Reading recording...';
+    try{ setCustom(await decodeBlob(new Blob(chunks,{type:mr.mimeType||'audio/webm'})),'My recording'); }
+    catch(err){ info.textContent='Could not read the recording. Try again, or use Choose audio.'; }
+  };
+  recMic=mr; mr.start(); btn.textContent='Stop (0s)';
+  info.textContent='Recording... speak now.';
+  recTimer=setInterval(()=>{ btn.textContent='Stop ('+Math.round((Date.now()-t0)/1000)+'s)'; },500);
+};
+$('#btnCPlay').onclick=()=>{
+  if(previewSrc){ try{previewSrc.stop();}catch(e){} return; }
+  if(!state.custom) return;
+  const ac=audioCtx(); const s=ac.createBufferSource(); s.buffer=state.custom.buf; s.connect(ac.destination);
+  s.onended=()=>{previewSrc=null;$('#btnCPlay').textContent='Play';};
+  previewSrc=s; s.start(); $('#btnCPlay').textContent='Stop';
+};
+$('#btnCClear').onclick=()=>{
+  state.custom=null; $('#cInfo').textContent='No voice-over yet.';
+  $('#btnCPlay').hidden=true; $('#btnCClear').hidden=true; idle();
+};
+
+/* ---------- text to image (AI-drawn SVG) ---------- */
+let genBusy=false;
+function cleanSvg(txt){
+  const m=(txt||'').match(/<svg[\s\S]*<\/svg>/i); if(!m) return null;
+  let s=m[0].replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi,'').replace(/\son\w+="[^"]*"/gi,'');
+  s=s.replace(/<svg([^>]*)>/i,(a,attrs)=>{
+    attrs=attrs.replace(/\s(width|height)="[^"]*"/gi,'');
+    if(!/xmlns=/.test(attrs)) attrs+=' xmlns="http://www.w3.org/2000/svg"';
+    if(!/viewBox/i.test(attrs)) attrs+=' viewBox="0 0 720 1280"';
+    return '<svg'+attrs+' width="720" height="1280">';
+  });
+  return s;
+}
+function svgToImage(svg){
+  return new Promise(res=>{const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});
+}
+$('#imgClear').onclick=()=>{ state.gen={}; $('#thumbs').innerHTML=''; $('#imgInfo').textContent=''; idle(); };
+$('#imgGo').onclick=async()=>{
+  if(genBusy) return;
+  const info=$('#imgInfo');
+  const sample=(window.claude&&claude.use)?await claude.use('sample'):null;
+  if(!sample){ info.textContent='Image drawing only works when this page is opened inside Claude.'; return; }
+  genBusy=true; const btn=$('#imgGo'); btn.disabled=true;
+  const tl=build(); const list=tl.scenes.slice(0,10);
+  const style=$('#imgStyle').value.trim()||'bold flat vector illustration';
+  const th=$('#thumbs'); th.innerHTML=''; state.gen={};
+  let ok=0;
+  for(let i=0;i<list.length;i++){
+    const text=list[i].text;
+    info.textContent='Drawing scene '+(i+1)+' of '+list.length+'...';
+    const prompt='Draw one vertical illustration as a single SVG that visually represents this line from a short video: "'+text+'"\nStyle: '+style+'.\nRules: output ONLY the <svg> element and nothing else. Use viewBox="0 0 720 1280". No text, letters or numbers inside the image. Rich colors, gradients and simple bold shapes. Keep the vertical middle area calmer because captions go there. No <image>, no <script>, no external references. Under 6000 characters.';
+    try{
+      const r=await sample(prompt,{modelTier:'default',cache:false});
+      const svg=cleanSvg(r&&r.text);
+      const im=svg?await svgToImage(svg):null;
+      if(im){
+        state.gen[text]=im; ok++;
+        const t=document.createElement('img'); t.src=im.src; t.alt='Scene '+(i+1); th.appendChild(t);
+        idle();
+      }
+    }catch(err){
+      if(err&&(err.code==='not_granted'||err.code==='rate_limited')){
+        info.textContent=err.code==='not_granted'?'Permission to draw was not granted.':'Too many requests. Wait a minute and try again.';
+        genBusy=false; btn.disabled=false; return;
+      }
+    }
+  }
+  genBusy=false; btn.disabled=false;
+  info.textContent=ok?('Made '+ok+' of '+list.length+' images. They now sit behind each scene.'):'No images came back. Try again or change the style.';
+  idle();
+};
+
+/* ---------- images: Claude drawings or free online AI ---------- */
+const POLL='https://image.pollinations.ai/prompt/';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function styleText(){ return $('#imgStyle').value.trim()||(IN_CLAUDE?'bold flat vector illustration':'cinematic digital illustration, vivid colors'); }
+function loadRemoteImage(url){
+  return new Promise(res=>{
+    const im=new Image(); im.crossOrigin='anonymous';
+    const timer=setTimeout(()=>{im.onload=null;im.onerror=null;res(null);},70000);
+    im.onload=()=>{clearTimeout(timer);res(im.naturalWidth?im:null);};
+    im.onerror=()=>{clearTimeout(timer);res(null);};
+    im.src=url;
+  });
+}
+async function makeImage(text,style,i){
+  if(IN_CLAUDE){
+    const sample=await claude.use('sample'); if(!sample) throw {code:'unavailable'};
+    const prompt='Draw one vertical illustration as a single SVG that visually represents this line from a short video: "'+text+'"\nStyle: '+style+'.\nRules: output ONLY the <svg> element and nothing else. Use viewBox="0 0 720 1280". No text, letters or numbers inside the image. Rich colors, gradients and simple bold shapes. Keep the vertical middle area calmer because captions go there. No <image>, no <script>, no external references. Under 6000 characters.';
+    const r=await sample(prompt,{modelTier:'default',cache:false});
+    const svg=cleanSvg(r&&r.text); return svg?await svgToImage(svg):null;
+  }
+  const p=text+', '+style+', vertical composition, no text, no letters';
+  const seed=(Date.now()%100000)+i;
+  const url=POLL+encodeURIComponent(p)+'?width=720&height=1280&nologo=true&model=flux&seed='+seed;
+  return await loadRemoteImage(url);
+}
+function addThumb(im,i){ const t=document.createElement('img'); t.src=im.src; t.alt='Scene '+(i+1); $('#thumbs').appendChild(t); }
+async function generateImages(list,style,onProgress){
+  let ok=0;
+  for(let i=0;i<list.length;i++){
+    if(cancelPrep) break;
+    const text=list[i];
+    if(state.gen[text]){ ok++; continue; }
+    onProgress('Making image '+(i+1)+' of '+list.length+'...');
+    let im=await makeImage(text,style,i);
+    if(!im&&!IN_CLAUDE&&!cancelPrep){ onProgress('Waiting a moment, then retrying image '+(i+1)+'...'); await sleep(16000); im=await makeImage(text,style,i+50); }
+    if(im){ state.gen[text]=im; ok++; addThumb(im,i); idle(); }
+    if(!IN_CLAUDE&&i<list.length-1&&!cancelPrep) await sleep(3000);
+  }
+  return ok;
+}
+async function autoImages(){
+  const list=parse($('#script').value).slice(0,10);
+  if(list.every(t=>state.gen[t])) return;
+  try{
+    const ok=await generateImages(list,styleText(),m=>{status(m);$('#imgInfo').textContent=m;});
+    $('#imgInfo').textContent=ok?('Images ready: '+ok+' of '+list.length+'.'):'No images came back, so plain backgrounds are used.';
+  }catch(err){
+    $('#imgInfo').textContent='Images skipped: '+(err&&err.code==='not_granted'?'permission was not granted.':err&&err.code==='rate_limited'?'too many requests.':'could not make them.');
+    await sleep(1500);
+  }
+}
+$('#imgGo').onclick=async()=>{
+  if(genBusy) return;
+  genBusy=true; cancelPrep=false;
+  const btn=$('#imgGo'), info=$('#imgInfo'); btn.disabled=true;
+  state.gen={}; $('#thumbs').innerHTML='';
+  const list=parse($('#script').value).slice(0,10);
+  try{
+    const ok=await generateImages(list,styleText(),m=>{info.textContent=m;});
+    info.textContent=ok?('Made '+ok+' of '+list.length+' images. They now sit behind each scene.'):'No images came back. Check your connection or change the style.';
+  }catch(err){
+    info.textContent=err&&err.code==='not_granted'?'Permission to draw was not granted.':err&&err.code==='rate_limited'?'Too many requests. Wait a minute and try again.':'Image making failed. Try again.';
+  }
+  genBusy=false; btn.disabled=false; idle();
+};
+
+/* ---------- script -> timeline ---------- */
+function parse(text){
+  const out=[];
+  text.split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(line=>{
+    const sentences=line.match(/[^.!?]+[.!?]*["')\]]*/g)||[line];
+    sentences.forEach(s=>{
+      s=s.trim(); if(!s) return;
+      const w=s.split(/\s+/);
+      if(w.length<=14){ out.push(s); return; }
+      const parts=Math.ceil(w.length/10), size=Math.ceil(w.length/parts);
+      for(let i=0;i<w.length;i+=size) out.push(w.slice(i,i+size).join(' '));
+    });
+  });
+  return out.length?out:['Type your script to begin'];
+}
+function build(){
+  const items=parse($('#script').value); let t=0;
+  if(state.engine==='custom'&&state.custom){
+    const total=state.custom.buf.duration+0.5;
+    const lensAll=items.map(s=>s.length+1), sumAll=lensAll.reduce((a,b)=>a+b,0);
+    const cs=items.map((text,i)=>{
+      const words=text.split(/\s+/), dur=total*lensAll[i]/sumAll;
+      const lens=words.map(w=>w.length+1), tot=lens.reduce((a,b)=>a+b,0); let acc=0;
+      const ends=lens.map(l=>(acc+=l)/tot);
+      const s={text,words,start:t,dur,audio:null,audioDur:dur*0.92,ends}; t+=dur; return s;
+    });
+    return {scenes:cs,total:t};
+  }
+  const scenes=items.map(text=>{
+    const words=text.split(/\s+/);
+    let dur, audio=null, audioDur=0;
+    const rec=state.engine==='kokoro'?cache.get(state.kvoice+'|'+state.pace+'|'+text):null;
+    if(rec){ audio=rec; audioDur=rec.data.length/rec.rate; dur=audioDur+0.45; }
+    else dur=Math.max(1.8,words.length*0.38+0.6)/state.pace;
+    const lens=words.map(w=>w.length+1), tot=lens.reduce((a,b)=>a+b,0); let acc=0;
+    const ends=lens.map(l=>(acc+=l)/tot);
+    const s={text,words,start:t,dur,audio,audioDur,ends}; t+=dur; return s;
+  });
+  return {scenes,total:t};
+}
+let cancelPrep=false;
+async function prepare(){
+  if(state.engine==='custom'&&!state.custom){ $('#cInfo').textContent='Add a voice-over first, or pick another voice type.'; }
+  if($('#autoImg').checked) await autoImages();
+  if(state.engine!=='kokoro') return !cancelPrep;
+  const items=parse($('#script').value);
+  try{
+    for(let i=0;i<items.length;i++){
+      if(cancelPrep) return false;
+      status('Making voice-over '+(i+1)+' of '+items.length+'...');
+      await genAudio(items[i],state.kvoice,state.pace);
+    }
+  }catch(e){
+    console.error(e);
+    const why=(e&&e.message)?e.message:String(e);
+    state.engine='device'; $('#engine').value='device'; $('#voiceSel').hidden=false;
+    $('#modelInfo').textContent='Natural voice failed: '+why+'. Using your device voice instead.';
+    status('Natural voice failed ('+why+'). Using your device voice (preview only).');
+    await new Promise(r=>setTimeout(r,2500));
+  }
+  return !cancelPrep;
+}
+
+/* ---------- drawing ---------- */
+function rr(x,y,w,h,r){ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); }
+function drawBg(t,idx,local,dur,text){
+  const L=LOOKS[state.look];
+  const gim=state.gen[text];
+  if(gim||state.images.length){
+    const im=gim||state.images[idx%state.images.length];
+    const z=1.06+0.08*(local/dur);
+    const s=Math.max(W/im.naturalWidth,H/im.naturalHeight)*z;
+    const w=im.naturalWidth*s,h=im.naturalHeight*s;
+    g.drawImage(im,(W-w)/2,(H-h)/2,w,h);
+    g.fillStyle='rgba(0,0,0,0.42)'; g.fillRect(0,0,W,H);
+    return;
+  }
+  const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,L.a); gr.addColorStop(1,L.b);
+  g.fillStyle=gr; g.fillRect(0,0,W,H);
+  L.blobs.forEach((c,i)=>{
+    const x=W*(0.5+0.42*Math.sin(t*0.35+i*2.1)), y=H*(0.5+0.42*Math.cos(t*0.27+i*1.7)), r=420+90*Math.sin(t*0.5+i);
+    const rg=g.createRadialGradient(x,y,0,x,y,r);
+    rg.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},0.5)`); rg.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
+    g.fillStyle=rg; g.fillRect(0,0,W,H);
+  });
+  const v=g.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.75);
+  v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(0,0,0,0.45)');
+  g.fillStyle=v; g.fillRect(0,0,W,H);
+}
+function drawCaption(sc,local){
+  const n=sc.words.length, maxW=600;
+  let size=Math.max(46,Math.min(88,100-n*3.2)), lines, lh;
+  for(;;){
+    g.font=`800 ${size}px ${FONT}`;
+    const sp=g.measureText(' ').width; lines=[]; let cur=[],cw=0;
+    sc.words.forEach((w,i)=>{
+      const ww=g.measureText(w).width;
+      if(cur.length&&cw+sp+ww>maxW){lines.push({items:cur,w:cw});cur=[];cw=0;}
+      cur.push({w,i,ww}); cw+=(cur.length>1?sp:0)+ww;
+    });
+    lines.push({items:cur,w:cw}); lh=size*1.2;
+    if(lines.length*lh<=760||size<=40) break; size-=4;
+  }
+  const sp=g.measureText(' ').width;
+  const p=Math.min(1,local/0.28), e=1-Math.pow(1-p,3);
+  const fade=local>sc.dur-0.18?Math.max(0,(sc.dur-local)/0.18):1;
+  const span=sc.audioDur>0?sc.audioDur:sc.dur*0.88;
+  const fr=local/span; let wi=n-1;
+  for(let i=0;i<n;i++){ if(fr<=sc.ends[i]){wi=i;break;} }
+  g.save();
+  g.globalAlpha=e*fade; g.translate(W/2,H*0.5); const s=0.9+0.1*e; g.scale(s,s);
+  g.textBaseline='middle'; g.textAlign='left';
+  const top=-(lines.length*lh)/2+lh/2;
+  lines.forEach((ln,li)=>{
+    let x=-ln.w/2; const y=top+li*lh;
+    ln.items.forEach(it=>{
+      const cur=it.i===wi, past=it.i<wi;
+      g.save();
+      g.shadowColor='rgba(0,0,0,0.6)'; g.shadowBlur=14; g.shadowOffsetY=3;
+      if(state.cap==='box'&&cur){
+        g.shadowColor='transparent'; g.fillStyle=state.hl; rr(x-12,y-size*0.62,it.ww+24,size*1.24,16); g.fill();
+        g.fillStyle='#14102a'; g.fillText(it.w,x,y);
+      }else if(state.cap==='pop'&&cur){
+        g.translate(x+it.ww/2,y); g.scale(1.14,1.14); g.fillStyle=state.hl; g.fillText(it.w,-it.ww/2,0);
+      }else{
+        g.fillStyle='#fff'; g.globalAlpha=g.globalAlpha*((past||cur||state.cap==='plain')?1:0.6); g.fillText(it.w,x,y);
+      }
+      g.restore();
+      x+=it.ww+sp;
+    });
+  });
+  g.restore();
+}
+function drawBars(tl,t,idx){
+  const n=tl.scenes.length;
+  if(n<=14){
+    const gap=6,left=36,wAll=W-left*2,w=(wAll-gap*(n-1))/n,y=48;
+    tl.scenes.forEach((sc,i)=>{
+      const x=left+i*(w+gap);
+      g.fillStyle='rgba(255,255,255,0.3)'; rr(x,y,w,6,3); g.fill();
+      const f=i<idx?1:i>idx?0:Math.min(1,(t-sc.start)/sc.dur);
+      if(f>0){g.fillStyle='#fff'; rr(x,y,w*f,6,3); g.fill();}
+    });
+  }else{
+    g.fillStyle='rgba(255,255,255,0.3)'; rr(36,48,W-72,6,3); g.fill();
+    g.fillStyle='#fff'; rr(36,48,(W-72)*Math.min(1,Math.max(0,t)/tl.total),6,3); g.fill();
+  }
+}
+function frame(t,tl){
+  t=Math.max(0,Math.min(t,tl.total-0.001));
+  let idx=0; for(let i=0;i<tl.scenes.length;i++){ if(t>=tl.scenes[i].start) idx=i; }
+  const sc=tl.scenes[idx], local=t-sc.start;
+  drawBg(t,idx,local,sc.dur,sc.text);
+  drawCaption(sc,local);
+  drawBars(tl,t,idx);
+  return idx;
+}
+
+/* ---------- audio: voice + music ---------- */
+const CHORDS=[[220,261.6,329.6],[174.6,220,261.6],[196,246.9,293.7],[164.8,196,246.9]];
+function makeMusic(ac,dest,level){
+  const master=ac.createGain(); master.gain.value=0;
+  const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1100; lp.connect(master); master.connect(dest);
+  const oscs=[0,1,2].map(i=>{
+    const o=ac.createOscillator(); o.type=i===0?'triangle':'sine'; o.frequency.value=CHORDS[0][i];
+    const gn=ac.createGain(); gn.gain.value=0.28; o.connect(gn); gn.connect(lp); o.start(); return o;
+  });
+  const bass=ac.createOscillator(); bass.type='sine'; bass.frequency.value=CHORDS[0][0]/2;
+  const bg=ac.createGain(); bg.gain.value=0.3; bass.connect(bg); bg.connect(lp); bass.start();
+  let k=0;
+  const timer=setInterval(()=>{
+    k=(k+1)%CHORDS.length; const now=ac.currentTime;
+    oscs.forEach((o,i)=>o.frequency.setTargetAtTime(CHORDS[k][i],now,0.4));
+    bass.frequency.setTargetAtTime(CHORDS[k][0]/2,now,0.4);
+  },4000);
+  master.gain.linearRampToValueAtTime(level,ac.currentTime+1.5);
+  return {stop(){
+    clearInterval(timer);
+    try{master.gain.cancelScheduledValues(ac.currentTime);master.gain.setTargetAtTime(0,ac.currentTime,0.1);}catch(e){}
+    setTimeout(()=>{ oscs.concat([bass]).forEach(o=>{try{o.stop();}catch(e){}}); try{master.disconnect();}catch(e){} },500);
+  }};
+}
+function startAudio(tl,forRecord){
+  const ac=audioCtx();
+  const out=forRecord?ac.createMediaStreamDestination():null;
+  const dest=out||ac.destination;
+  const start=ac.currentTime+0.2;
+  const vg=ac.createGain(); vg.gain.value=1; vg.connect(dest);
+  const nodes=[];
+  if(state.engine==='kokoro'){
+    tl.scenes.forEach(sc=>{
+      if(!sc.audio) return;
+      const b=ac.createBuffer(1,sc.audio.data.length,sc.audio.rate); b.copyToChannel(sc.audio.data,0);
+      const s=ac.createBufferSource(); s.buffer=b; s.connect(vg); s.start(start+sc.start+0.05); nodes.push(s);
+    });
+  }
+  if(state.engine==='custom'&&state.custom){
+    const cs=ac.createBufferSource(); cs.buffer=state.custom.buf; cs.connect(vg); cs.start(start+0.05); nodes.push(cs);
+  }
+  const loud=(state.engine==='kokoro'||(state.engine==='custom'&&!!state.custom));
+  const music=state.music?makeMusic(ac,dest,loud?0.07:0.16):null;
+  return {ac,out,nodes,vg,music};
+}
+function stopAudio(a){
+  if(!a) return;
+  a.nodes.forEach(s=>{try{s.stop();}catch(e){}});
+  if(a.music) a.music.stop();
+  try{a.vg.disconnect();}catch(e){}
+}
+
+/* ---------- run loop ---------- */
+let run=null, raf=0, wake=null;
+const btnPlay=$('#btnPlay'), btnSave=$('#btnSave');
+function idle(){ if(run||phase!=='idle') return; const tl=build(); frame(Math.min(1.1,tl.total/2),tl); }
+async function fontsReady(){ try{ await document.fonts.load('800 64px "Bricolage Grotesque"'); }catch(e){} }
+async function lockScreen(){ try{ if(navigator.wakeLock) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
+function unlockScreen(){ try{ if(wake) wake.release(); }catch(e){} wake=null; }
+function resetUI(msg){
+  phase='idle'; run=null;
+  btnPlay.textContent='Preview'; btnPlay.disabled=false;
+  btnSave.textContent='Save video'; btnSave.disabled=false;
+  if(msg) status(msg); idle();
+}
+function tick(){
+  if(!run) return;
+  const t=(performance.now()-run.t0)/1000;
+  const idx=frame(t,run.tl);
+  if(idx!==run.last){ run.last=idx; if(run.mode==='preview'&&state.engine==='device') speakDevice(run.tl.scenes[idx].text); }
+  if(run.mode==='rec') status('Recording... '+Math.max(0,Math.min(100,Math.round(t/run.tl.total*100)))+'%. Keep this screen open.');
+  if(t>=run.tl.total+(run.mode==='rec'?0.5:0.2)){ finish(); return; }
+  raf=requestAnimationFrame(tick);
+}
+function stopAll(){
+  cancelAnimationFrame(raf);
+  if(run) stopAudio(run.audio);
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  unlockScreen();
+  run=null;
+}
+function finish(){
+  if(run&&run.mode==='rec'){ cancelAnimationFrame(raf); run.rec.stop(); return; }
+  stopAll(); resetUI('Ready');
+}
+function prepError(e){
+  resetUI('Voice-over failed. Check your internet connection, then try again.');
+  console.error(e);
+}
+
+async function startPreview(){
+  phase='prep'; cancelPrep=false; btnPlay.textContent='Cancel'; btnSave.disabled=true;
+  try{ await fontsReady(); if(!(await prepare())){ resetUI('Cancelled'); return; } }
+  catch(e){ prepError(e); return; }
+  const tl=build(); const audio=startAudio(tl,false);
+  run={mode:'preview',tl,t0:performance.now()+200,last:-1,audio};
+  phase='play'; btnPlay.textContent='Stop'; status('Playing preview');
+  lockScreen(); raf=requestAnimationFrame(tick);
+}
+async function startRecord(){
+  if(typeof MediaRecorder==='undefined'||!cv.captureStream){ status("This browser can't record video. Try Chrome, Edge, Safari or Firefox."); return; }
+  phase='prep'; cancelPrep=false; btnSave.textContent='Cancel'; btnPlay.disabled=true;
+  try{ await fontsReady(); if(!(await prepare())){ resetUI('Cancelled'); return; } }
+  catch(e){ prepError(e); return; }
+  const tl=build();
+  const stream=cv.captureStream(30);
+  const audio=startAudio(tl,true);
+  const wantAudio=state.music||state.engine==='kokoro'||(state.engine==='custom'&&!!state.custom);
+  if(wantAudio&&audio.out) audio.out.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
+  const hasAudio=stream.getAudioTracks().length>0;
+  const cands=hasAudio
+    ?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+    :['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  const mime=cands.find(m=>MediaRecorder.isTypeSupported(m))||'';
+  let rec;
+  try{ rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:5000000}:{}); }
+  catch(e){ stopAudio(audio); resetUI('Recording failed to start.'); return; }
+  const chunks=[]; let cancelled=false;
+  rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  rec.onstop=()=>{
+    const type=rec.mimeType||mime||'video/webm';
+    stopAll();
+    if(cancelled){ resetUI('Cancelled'); return; }
+    const blob=new Blob(chunks,{type});
+    const ext=type.indexOf('mp4')>=0?'mp4':'webm';
+    download(blob,'short-'+Date.now()+'.'+ext);
+    resetUI('Video saved: short.'+ext+(state.engine==='device'?' (device voice is not recorded)':''));
+  };
+  run={mode:'rec',tl,t0:performance.now()+200,last:-1,rec,audio};
+  run.cancel=()=>{cancelled=true; cancelAnimationFrame(raf); rec.stop();};
+  phase='rec'; btnSave.textContent='Cancel';
+  lockScreen(); rec.start(250); raf=requestAnimationFrame(tick);
+}
+
+btnPlay.onclick=()=>{
+  if(phase==='prep'){ cancelPrep=true; return; }
+  if(run){ stopAll(); resetUI('Stopped'); return; }
+  startPreview();
+};
+btnSave.onclick=()=>{
+  if(phase==='prep'){ cancelPrep=true; return; }
+  if(phase==='rec'&&run){ run.cancel(); return; }
+  if(phase==='idle') startRecord();
+};
+
+fontsReady().then(idle); idle();
+})();
+</script>
+</body>
+</html>
